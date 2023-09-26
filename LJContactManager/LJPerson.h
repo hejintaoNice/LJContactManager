@@ -178,14 +178,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  */
 - (instancetype)initWithCNContact:(CNContact *)contact;
 
-/**
- 便利构造 （AddressBook）
-
- @param record 记录
- @return 对象
- */
-- (instancetype)initWithRecord:(ABRecordRef)record;
-
 @end
 
 /// 电话
@@ -209,15 +201,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
 
-/**
- 便利构造 （AddressBook）
-
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
-
 @end
 
 /// 电子邮件
@@ -240,15 +223,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  @return 对象
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
-
-/**
- 便利构造 （AddressBook）
- 
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
 
 @end
 
@@ -303,15 +277,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
 
-/**
- 便利构造 （AddressBook）
- 
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
-
 @end
 
 /// 生日
@@ -355,14 +320,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  */
 - (instancetype)initWithCNContact:(CNContact *)contact;
 
-/**
- 便利构造 （AddressBook）
- 
- @param record 记录
- @return 对象
- */
-- (instancetype)initWithRecord:(ABRecordRef)record;
-
 @end
 
 /// 即时通讯
@@ -385,15 +342,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  @return 对象
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
-
-/**
- 便利构造 （AddressBook）
- 
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
 
 @end
 
@@ -423,15 +371,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
 
-/**
- 便利构造 （AddressBook）
- 
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
-
 @end
 
 /// URL
@@ -455,15 +394,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
 
-/**
- 便利构造 （AddressBook）
- 
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
-
 @end
 
 /// 关联人
@@ -486,15 +416,6 @@ typedef NS_ENUM(NSUInteger, LJContactType)
  @return 对象
  */
 - (instancetype)initWithLabeledValue:(CNLabeledValue *)labeledValue;
-
-/**
- 便利构造 （AddressBook）
- 
- @param multiValue 标签和值
- @param index 下标
- @return 对象
- */
-- (instancetype)initWithMultiValue:(ABMultiValueRef)multiValue index:(CFIndex)index;
 
 @end
 

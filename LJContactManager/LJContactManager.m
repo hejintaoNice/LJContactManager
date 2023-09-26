@@ -18,14 +18,13 @@
 
 #define IOS9_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 9.0)
 
-@interface LJContactManager () <ABNewPersonViewControllerDelegate, ABPeoplePickerNavigationControllerDelegate, CNContactViewControllerDelegate, CNContactPickerDelegate>
+@interface LJContactManager () <CNContactViewControllerDelegate, CNContactPickerDelegate>
 
 @property (nonatomic, copy) void (^handler) (NSString *, NSString *);
 @property (nonatomic, assign) BOOL isAdd;
 @property (nonatomic, copy) NSArray *keys;
 @property (nonatomic, strong) LJPeoplePickerDelegate *pickerDelegate;
 @property (nonatomic, strong) LJPickerDetailDelegate *pickerDetailDelegate;
-@property (nonatomic) ABAddressBookRef addressBook;
 @property (nonatomic, strong) CNContactStore *contactStore;
 @property (nonatomic) dispatch_queue_t queue;
 
@@ -47,11 +46,6 @@
                                                      selector:@selector(_contactStoreDidChange)
                                                          name:CNContactStoreDidChangeNotification
                                                        object:nil];
-        }
-        else
-        {
-            _addressBook = ABAddressBookCreate();
-            ABAddressBookRegisterExternalChangeCallback(self.addressBook, _addressBookChange, nil);
         }
     }
     return self;
@@ -141,21 +135,6 @@
         UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:contactController];
         [controller presentViewController:nav animated:YES completion:nil];
     }
-    else
-    {
-        ABNewPersonViewController *picker = [[ABNewPersonViewController alloc] init];
-        ABRecordRef newPerson = ABPersonCreate();
-        ABMutableMultiValueRef multiValue = ABMultiValueCreateMutable(kABMultiStringPropertyType);
-        CFErrorRef error = NULL;
-        ABMultiValueAddValueAndLabel(multiValue, (__bridge CFTypeRef)(phoneNum), kABPersonPhoneMobileLabel, NULL);
-        ABRecordSetValue(newPerson, kABPersonPhoneProperty, multiValue , &error);
-        CFRelease(multiValue);
-        picker.displayedPerson = newPerson;
-        CFRelease(newPerson);
-        picker.newPersonViewDelegate = self;
-        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:picker];
-        [controller presentViewController:nav animated:YES completion:nil];
-    }
 }
 
 - (void)addToExistingContactsWithPhoneNum:(NSString *)phoneNum controller:(UIViewController *)controller
@@ -185,13 +164,7 @@
             }
             else
             {
-                [self _asynAccessAddressBookWithSort:NO completcion:^(NSArray *datas, NSArray *keys) {
-                    
-                    if (completcion)
-                    {
-                        completcion(YES, datas);
-                    }
-                }];
+                
             }
         }
         else
@@ -222,13 +195,7 @@
             }
             else
             {
-                [self _asynAccessAddressBookWithSort:YES completcion:^(NSArray *datas, NSArray *keys) {
-                    
-                    if (completcion)
-                    {
-                        completcion(YES, datas, keys);
-                    }
-                }];
+                
             }
         }
         else
@@ -239,13 +206,6 @@
             }
         }
     }];
-}
-
-#pragma mark - ABNewPersonViewControllerDelegate
-
-- (void)newPersonViewController:(ABNewPersonViewController *)newPersonView didCompleteWithNewPerson:(nullable ABRecordRef)person
-{
-    [newPersonView dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - CNContactViewControllerDelegate
@@ -300,15 +260,6 @@
             }
         }];
     }
-    else
-    {
-        ABAddressBookRequestAccessWithCompletion(_addressBook, ^(bool granted, CFErrorRef error) {
-            if (completion)
-            {
-                completion(granted);
-            }
-        });
-    }
 }
 
 void _blockExecute(void (^completion)(BOOL authorizationA), BOOL authorizationB)
@@ -330,58 +281,28 @@ void _blockExecute(void (^completion)(BOOL authorizationA), BOOL authorizationB)
 
 - (void)_presentFromController:(UIViewController *)controller
 {
-    if (IOS9_OR_LATER)
+    CNContactPickerViewController *pc = [[CNContactPickerViewController alloc] init];
+    if (self.isAdd)
     {
-        CNContactPickerViewController *pc = [[CNContactPickerViewController alloc] init];
-        if (self.isAdd)
-        {
-            pc.delegate = self.pickerDelegate;
-        }
-        else
-        {
-            pc.delegate = self.pickerDetailDelegate;
-        }
-        
-        pc.displayedPropertyKeys = @[CNContactPhoneNumbersKey];
-        
-        [self requestAddressBookAuthorization:^(BOOL authorization) {
-            if (authorization)
-            {
-                [controller presentViewController:pc animated:YES completion:nil];
-            }
-            else
-            {
-                [self _showAlertFromController:controller];
-            }
-        }];
+        pc.delegate = self.pickerDelegate;
     }
     else
     {
-        ABPeoplePickerNavigationController *pvc = [[ABPeoplePickerNavigationController alloc] init];
-        pvc.displayedProperties = @[@(kABPersonPhoneProperty)];
-        
-        if (self.isAdd)
+        pc.delegate = self.pickerDetailDelegate;
+    }
+    
+    pc.displayedPropertyKeys = @[CNContactPhoneNumbersKey];
+    
+    [self requestAddressBookAuthorization:^(BOOL authorization) {
+        if (authorization)
         {
-            pvc.peoplePickerDelegate = self.pickerDelegate;
+            [controller presentViewController:pc animated:YES completion:nil];
         }
         else
         {
-            pvc.peoplePickerDelegate = self.pickerDetailDelegate;
+            [self _showAlertFromController:controller];
         }
-        
-        [self requestAddressBookAuthorization:^(BOOL authorization) {
-            
-            if (authorization)
-            {
-                [controller presentViewController:pvc animated:YES completion:nil];
-            }
-            else
-            {
-                [self _showAlertFromController:controller];
-            }
-            
-        }];
-    }
+    }];
 }
 
 - (void)_showAlertFromController:(UIViewController *)controller
@@ -402,55 +323,6 @@ void _blockExecute(void (^completion)(BOOL authorizationA), BOOL authorizationB)
         }
     }])];
     [controller presentViewController:alertControl animated:YES completion:nil];
-}
-
-- (void)_asynAccessAddressBookWithSort:(BOOL)isSort completcion:(void (^)(NSArray *, NSArray *))completcion
-{
-    NSMutableArray *datas = [NSMutableArray array];
-    
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(_queue, ^{
-        
-        CFArrayRef allPeople = ABAddressBookCopyArrayOfAllPeople(weakSelf.addressBook);
-        CFIndex count = CFArrayGetCount(allPeople);
-        
-        for (int i = 0; i < count; i++)
-        {
-            ABRecordRef record = CFArrayGetValueAtIndex(allPeople, i);
-            LJPerson *personModel = [[LJPerson alloc] initWithRecord:record];
-            [datas addObject:personModel];
-        }
-        
-        CFRelease(allPeople);
-        
-        if (!isSort)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-                if (completcion)
-                {
-                    completcion(datas, nil);
-                }
-                
-            });
-            
-            return ;
-        }
-        
-        [self _sortNameWithDatas:datas completcion:^(NSArray *persons, NSArray *keys) {
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-                if (completcion)
-                {
-                    completcion(persons, keys);
-                }
-                
-            });
-            
-        }];
-        
-    });
 }
 
 - (void)_asynAccessContactStoreWithSort:(BOOL)isSort completcion:(void (^)(NSArray *, NSArray *))completcion
@@ -564,14 +436,6 @@ void _blockExecute(void (^completion)(BOOL authorizationA), BOOL authorizationB)
     }
 }
 
-void _addressBookChange(ABAddressBookRef addressBook, CFDictionaryRef info, void *context)
-{
-    if ([LJContactManager sharedInstance].contactChangeHandler)
-    {
-        [LJContactManager sharedInstance].contactChangeHandler();
-    }
-}
-
 - (void)_contactStoreDidChange
 {
     if ([LJContactManager sharedInstance].contactChangeHandler)
@@ -588,12 +452,7 @@ void _addressBookChange(ABAddressBookRef addressBook, CFDictionaryRef info, void
     }
     else
     {
-        ABAddressBookUnregisterExternalChangeCallback(_addressBook, _addressBookChange, nil);
-        if (_addressBook)
-        {
-            CFRelease(_addressBook);
-            _addressBook = NULL;
-        }
+        
     }
 }
 

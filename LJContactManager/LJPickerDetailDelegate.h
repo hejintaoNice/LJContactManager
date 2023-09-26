@@ -10,7 +10,7 @@
 #import <AddressBookUI/AddressBookUI.h>
 #import <ContactsUI/ContactsUI.h>
 
-@interface LJPickerDetailDelegate : NSObject <ABPeoplePickerNavigationControllerDelegate,CNContactPickerDelegate>
+@interface LJPickerDetailDelegate : NSObject <CNContactPickerDelegate>
 
 @property (nonatomic, copy) void (^handler) (NSString *name, NSString *phoneNum);
 
